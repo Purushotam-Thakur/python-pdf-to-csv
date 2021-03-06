@@ -1,1 +1,11 @@
-<iframe width="900" height="506" src="https://www.youtube.com/embed/gcY65lmNhig" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+import re
+
+
+print(re.search('^(?:A\.|\(a\))', '(b)'))
+
+if re.search('^(?:A\.|\(a\))', 'A.'):
+    print("yessssssssss")
+else:
+    print('Nooooooooooo')
+
+

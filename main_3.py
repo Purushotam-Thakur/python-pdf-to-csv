@@ -4,7 +4,7 @@ import csv
 import re
 from nose.tools import assert_true
 
-file_name = 'Questions on above topic how human body respond to infection'
+file_name = 'Objective questions on above topic prevention and treatment'
 csv_file_name = './csv/'+file_name+'.csv'
 
 answer = {
@@ -25,7 +25,7 @@ row_dict = {
     'explanation': '',
     'course/subject': '174',
     'instruction': '',
-    'tags(Coma Seprate)': 'human body respond to infection,human body,infection,bilogy,science',
+    'tags(Coma Seprate)': 'prevention,treatment,biology,science',
     'topic(Topic id)': '5',
     'isShow': True,
 }
@@ -101,28 +101,48 @@ def prepare_row(prev_line, current_text):
     #     next_is_question = True
     #     print("Question No=================")
     #     return False
-    elif re.search('^A\.', current_text):
+    elif re.search('A\.', current_text):
         print("(A)=================")
-        # row_dict['option1'] = current_text[3:]
+        # row_dict['option1'] = current_text[3:].strip()
         row_dict['question'] = prev_line
         return False
     elif re.search('^B\.', current_text):
-        # row_dict['option2'] = current_text[3:]
+        # row_dict['option2'] = current_text[3:].strip()
         row_dict['option1'] = prev_line
         print("(B)=================")
         return False
     elif re.search('^C\.', current_text):
-        # row_dict['option3'] = current_text[3:]
+        # row_dict['option3'] = current_text[3:].strip()
         row_dict['option2'] = prev_line
         print("(C)=================")
         return False
     elif re.search('^D\.', current_text):
-        # row_dict['option4'] = current_text[3:]
+        # row_dict['option4'] = current_text[3:].strip()
         row_dict['option3'] = prev_line
         print("(D)=================")
         return False
-    elif re.search("^[A-Dc]$", current_text):
-        row_dict['option4'] = prev_line
+    elif re.search('^\(a\)', current_text):
+        print("(A)=================")
+        row_dict['option1'] = current_text[3:].strip()
+        row_dict['question'] = prev_line
+        return False
+    elif re.search('^\(b\)', current_text):
+        row_dict['option2'] = current_text[3:].strip()
+        # row_dict['option1'] = prev_line
+        print("(B)=================")
+        return False
+    elif re.search('^\(c\)', current_text):
+        row_dict['option3'] = current_text[3:].strip()
+        # row_dict['option2'] = prev_line
+        print("(C)=================")
+        return False
+    elif re.search('^\(d\)', current_text):
+        row_dict['option4'] = current_text[3:].strip()
+        # row_dict['option3'] = prev_line
+        print("(D)=================")
+        return False
+    elif re.search("^[A-D]$", current_text):
+        # row_dict['option4'] = prev_line
         row_dict['answer'] = answer[current_text]
         print("answer=================")
         return True

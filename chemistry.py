@@ -4,7 +4,7 @@ import csv
 import re
 from nose.tools import assert_true
 
-file_name = 'Questions on above topic how human body respond to infection'
+file_name = 'Chemistry Questions Bank'
 csv_file_name = './csv/'+file_name+'.csv'
 
 answer = {
@@ -23,10 +23,10 @@ row_dict = {
     'option4': '',
     'answer': '',
     'explanation': '',
-    'course/subject': '174',
+    'course/subject': '122',
     'instruction': '',
-    'tags(Coma Seprate)': 'human body respond to infection,human body,infection,bilogy,science',
-    'topic(Topic id)': '5',
+    'tags(Coma Seprate)': 'metal,non-metals,chemistry,science',
+    'topic(Topic id)': '',
     'isShow': True,
 }
 next_is_question = False
@@ -71,10 +71,10 @@ def read_pdf():
         # For iterating over list a loop is used
         print("++++++++++++++++++++++++++++++ =-=-==- len(text): ", len(text))
         for i in range(len(text)):
-            prev_line = current_line
             current_line = text[i]
             current_line = current_line.strip()
             current_line = current_line.replace("\n", "")
+            prev_line = current_line
 
             # Lines are separated using "\n"
             # print("++++++++++++++++++++++++++++++")
@@ -94,36 +94,39 @@ def prepare_row(prev_line, current_text):
     global next_is_question
     if re.search("^[0-9]{1,2}\.", current_text):
         # row_dict['course/subject'] = prev_text
-        # row_dict['question'] = current_text[3:]
+        # row_dict['question'] = current_text[3:].strip()
         print("Question No. 01=================")
         return False
     # elif re.search("^Question No", current_text):
     #     next_is_question = True
     #     print("Question No=================")
     #     return False
-    elif re.search('^A\.', current_text):
+    elif re.search('A\.', current_text):
         print("(A)=================")
-        # row_dict['option1'] = current_text[3:]
+        # row_dict['option1'] = current_text[3:].strip()
         row_dict['question'] = prev_line
         return False
     elif re.search('^B\.', current_text):
-        # row_dict['option2'] = current_text[3:]
+        # row_dict['option2'] = current_text[3:].strip()
         row_dict['option1'] = prev_line
         print("(B)=================")
         return False
     elif re.search('^C\.', current_text):
-        # row_dict['option3'] = current_text[3:]
+        # row_dict['option3'] = current_text[3:].strip()
         row_dict['option2'] = prev_line
         print("(C)=================")
         return False
     elif re.search('^D\.', current_text):
-        # row_dict['option4'] = current_text[3:]
+        # row_dict['option4'] = current_text[3:].strip()
         row_dict['option3'] = prev_line
         print("(D)=================")
         return False
-    elif re.search("^[A-Dc]$", current_text):
+    elif re.search("^Answer: Option [A-D]$", current_text):
+        print("+++++++++++=-=-=-=-=")
+        print(current_text)
+        print(current_text[14:])
         row_dict['option4'] = prev_line
-        row_dict['answer'] = answer[current_text]
+        row_dict['answer'] = answer[current_text[13:].strip()]
         print("answer=================")
         return True
     return False
