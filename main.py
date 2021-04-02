@@ -1,138 +1,95 @@
-# Importing required modules
-import PyPDF2
+import fitz
+import os
 import csv
-import re
-from nose.tools import assert_true
+import logging
 
-row_dict = {
-    'question': '',
-    'option1': '',
-    'option2': '',
-    'option3': '',
-    'option4': '',
-    'answer': '',
-    'explanation': '',
-    'course/subject': '',
-    'instruction': '',
-    'tags(Coma Seprate)': '',
-    'isShow': True,
-}
-next_is_question = False
+from common_file.init_row_dict import init_dict
+from prepare_row.factory import factory
+
+path = './csv'
+
+init_dict['course/subject'] = '192,513,531'
+init_dict['tags(Coma Seprate)'] = 'english,grammar,sentence improvement'
+init_dict['topic(Topic id)'] = '60'
+
 header = ['question', 'option1', 'option2', 'option3', 'option4', 'answer', 'explanation',
-          'course/subject', 'instruction', 'tags(Coma Seprate)', 'isShow']
+          'course/subject', 'instruction', 'tags(Coma Seprate)', 'topic(Topic id)', 'isShow']
+prepare_row_type = 'v1'
 
 
-def test_pdf():
-    # Creating a pdf file object
-    pdf_file_obj = open('./pdfFile/GS280.pdf', 'rb')
+def convert_pdf(pdf_file, csv_file_path):
+    row_dict = init_dict.copy()
+    try:
+        obj = factory(prepare_row_type).get_prepare_row_type()
+        if hasattr(obj, 'prepare_row()'):
+            print('Define prepare row type is not available')
+            return
 
-    # Creating a pdf reader object
-    pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
+        with fitz.open(pdf_file) as doc:
+            text = ""
+            for page in doc:
+                text += page.getText()
 
-    page_obj = pdf_reader.getPage(2)
-    text = page_obj.extractText().split("\n \n")
-    print("++++++++++++++++++")
-    print(text)
+        pdf_doc = text.split("\n")
+        # print('pdf text = ', text)
+        print('pdf_doc = ', pdf_doc)
+        prev_text = ''
 
-    test_list = list(filter(None, text))
-    print("=-=-=-=-=-=--=--=-=-=-=--=-=-=-=-")
-    print(test_list)
+        csv_file = open(csv_file_path, 'w', newline='')
+        writer = csv.DictWriter(csv_file, fieldnames=header)
+        writer.writeheader()
 
-    pdf_file_obj.close()
+        for current_text in pdf_doc:
+            # print("start===============>>>>")
+            current_text = current_text.replace("\n", "")
+            current_text = current_text.replace("→", "->")
+            current_text = current_text.replace("⟶", "->")
+            current_text = current_text.replace("─", "-")
+            current_text = current_text.replace("≥", ">=")
+            current_text = current_text.replace("≤", "<=")
+            current_text = current_text.replace("₂", "2")
+            current_text = current_text.replace("₃", "3")
+            current_text = current_text.replace("₄", "4")
+            current_text = current_text.replace("₅", "5")
+            current_text = current_text.replace("₆", "6")
+            current_text = current_text.replace("₇", "7")
+            current_text = current_text.replace("₈", "8")
+            current_text = current_text.replace("₁₀", "10")
+            current_text = current_text.replace("⁻", "-")
+            current_text = current_text.replace("‾", "-")
+            current_text = current_text.replace("⁺²", "+2")
+            current_text = current_text.strip()
+            # print("End===============>>>>")
+            if current_text:
+                try:
+                    current_text = current_text[1:] if current_text[0] == '.' else current_text
+                except Exception as e:
+                    print("Exception while remove .")
+                    print(e)
+
+                if obj.prepare_row(row_dict, prev_text, current_text):
+                    try:
+                        writer.writerow(row_dict)
+                        row_dict = init_dict.copy()
+                    except Exception as ex:
+                        logging.error("Exception while writing to csv")
+                        logging.error(row_dict)
+                        logging.error(ex)
+                prev_text = current_text
+    except Exception as e:
+        logging.error("Exception while converting pdf")
+        logging.error(e)
 
 
 def read_pdf():
-    global row_dict
-    global next_is_question
-    prev_line = ''
-    current_line = ''
-
-    # Creating a pdf file object
-    pdf_file_obj = open('./pdfFile/GS280.pdf', 'rb')
-
-    # Creating a pdf reader object
-    pdf_reader = PyPDF2.PdfFileReader(pdf_file_obj)
-
-    # Getting number of pages in pdf file
-    pages = pdf_reader.numPages
-    csv_file = open('sample.csv', 'w', newline='')
-    writer = csv.DictWriter(csv_file, fieldnames=header)
-    writer.writeheader()
-
-    # Loop for reading all the Pages
-    for i in range(pages):
-
-        # Creating a page object
-        page_obj = pdf_reader.getPage(i)
-
-        # Printing Page Number
-        print("Page No: ", i)
-
-        # Extracting text from page
-        # And splitting it into chunks of lines
-        text = page_obj.extractText().split("\n \n")
-
-        # Finally the lines are stored into list
-        # For iterating over list a loop is used
-        print("++++++++++++++++++++++++++++++ =-=-==- len(text): ", len(text))
-        for i in range(len(text)):
-            prev_line = current_line
-            prev_line = prev_line.replace("\n", "")
-            current_line = text[i]
-            # Printing the line
-
-            if next_is_question:
-                row_dict['question'] = text[i]
-                next_is_question = False
-                continue
-
-            # Lines are separated using "\n"
-            print("++++++++++++++++++++++++++++++")
-            print(text[i], end="\n")
-            if prepare_row(prev_line, current_line):
-                writer.writerow(row_dict)
-
-        # For Separating the Pages
-        print("-=--=-=-==-=-=-----=--=-=-=-=-=--=--=-=-=-=--=")
-    # closing the pdf file object
-    pdf_file_obj.close()
-    csv_file.close()
+    os.chdir(path)
+    cwd = os.getcwd()
+    print(cwd)
+    for i in os.walk(cwd):
+        for j in i[2]:
+            if j.endswith('.pdf'):
+                print('File Name : ', j)
+                convert_pdf(j, j.replace('.pdf', '.csv'))
 
 
-def prepare_row(prev_text, current_text):
-    global row_dict
-    global next_is_question
-    if re.search("^Question No. 01", current_text):
-        row_dict['course/subject'] = prev_text
-        print(prev_text, '=-', current_text)
-        print("Question No. 01=================")
-        return False
-    elif re.search("^Question No", current_text):
-        next_is_question = True
-        print("Question No=================")
-        return False
-    elif re.search('^\(A\)', current_text):
-        print("(A)=================")
-        row_dict['option1'] = current_text
-        return False
-    elif re.search('^\(B\)', current_text):
-        row_dict['option2'] = current_text
-        print("(B)=================")
-        return False
-    elif re.search('^\(C\)', current_text):
-        row_dict['option3'] = current_text
-        print("(C)=================")
-        return False
-    elif re.search('^\(D\)', current_text):
-        row_dict['option4'] = current_text
-        print("(D)=================")
-        return False
-    elif re.search("^Answer:", current_text):
-        row_dict['answer'] = current_text
-        print("answer=================")
-        return True
-    return False
-
-
-# test_pdf()
 read_pdf()

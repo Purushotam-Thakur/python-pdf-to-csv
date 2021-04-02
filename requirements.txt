@@ -1,2 +1,6 @@
 PyPDF2
 nose
+fitz
+pymupdf
+xlsxwriter
+tablib
