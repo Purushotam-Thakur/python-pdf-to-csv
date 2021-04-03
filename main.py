@@ -3,6 +3,9 @@ import os
 import csv
 import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 from common_file.init_row_dict import init_dict
 from prepare_row.factory import factory
 
@@ -22,7 +25,7 @@ def convert_pdf(pdf_file, csv_file_path):
     try:
         obj = factory(prepare_row_type).get_prepare_row_type()
         if hasattr(obj, 'prepare_row()'):
-            print('Define prepare row type is not available')
+            logging.info('Define prepare row type is not available')
             return
 
         with fitz.open(pdf_file) as doc:
@@ -31,8 +34,8 @@ def convert_pdf(pdf_file, csv_file_path):
                 text += page.getText()
 
         pdf_doc = text.split("\n")
-        # print('pdf text = ', text)
-        print('pdf_doc = ', pdf_doc)
+        # logging.info('pdf text = %s', text)
+        logging.info('pdf_doc = ', pdf_doc)
         prev_text = ''
 
         csv_file = open(csv_file_path, 'w', newline='')
@@ -40,7 +43,7 @@ def convert_pdf(pdf_file, csv_file_path):
         writer.writeheader()
 
         for current_text in pdf_doc:
-            # print("start===============>>>>")
+            # logging.info("start===============>>>>")
             current_text = current_text.replace("\n", "")
             current_text = current_text.replace("→", "->")
             current_text = current_text.replace("⟶", "->")
@@ -59,13 +62,13 @@ def convert_pdf(pdf_file, csv_file_path):
             current_text = current_text.replace("‾", "-")
             current_text = current_text.replace("⁺²", "+2")
             current_text = current_text.strip()
-            # print("End===============>>>>")
+            # logging.info("End===============>>>>")
             if current_text:
                 try:
                     current_text = current_text[1:] if current_text[0] == '.' else current_text
                 except Exception as e:
-                    print("Exception while remove .")
-                    print(e)
+                    logging.error("Exception while remove .")
+                    logging.error(e)
 
                 if obj.prepare_row(row_dict, prev_text, current_text):
                     try:
@@ -84,11 +87,11 @@ def convert_pdf(pdf_file, csv_file_path):
 def read_pdf():
     os.chdir(path)
     cwd = os.getcwd()
-    print(cwd)
+    logging.info(cwd)
     for i in os.walk(cwd):
         for j in i[2]:
             if j.endswith('.pdf'):
-                print('File Name : ', j)
+                logging.info('File Name : %s', j)
                 convert_pdf(j, j.replace('.pdf', '.csv'))
 
 
